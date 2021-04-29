@@ -11,6 +11,10 @@ import { vertOrientShader, vertPassThroughShader, fragPassThroughShader, fragOri
 import {fontPng} from './fnt.js' // pngName;
 import metrics from './fnt.json'
 
+import createModule from './robust-range';
+
+var Module
+
 /**
  * @class Niivue
  * @description
@@ -579,7 +583,10 @@ Niivue.prototype.loadVolumes  = function(volumeList) {
       this.nii2RAS(this.volumes[i])
       //_overlayItem = overlayItem
       //this.selectColormap(this.volumes[0].colorMap) //only base image for now
-      this.updateGLVolume()
+      this.initWasm()
+      .then(() => {
+        this.updateGLVolume()
+      })
     }.bind(this) // bind "this" niivue instance context
     xhr[i].send();
   } // for
@@ -668,6 +675,12 @@ Niivue.prototype.initText = async function () {
 	}
 } // initText()
 
+
+//init wasm
+Niivue.prototype.initWasm = async function () {
+  Module = await createModule()
+  Niivue.prototype.robust_range = Module.cwrap('robust_range', 'number', ['number', 'number']);
+}
 Niivue.prototype.init = async function () {
 	//initial setup: only at the startup of the component
   // print debug info (gpu vendor and renderer)
@@ -676,6 +689,7 @@ Niivue.prototype.init = async function () {
   let renderer = this.gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
   console.log("gpu vendor: ", vendor)
   console.log("gpu renderer: ", renderer)
+
   this.gl.enable(this.gl.CULL_FACE);
   this.gl.cullFace(this.gl.FRONT);
   this.gl.enable(this.gl.BLEND);
