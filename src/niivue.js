@@ -59,7 +59,8 @@ import metrics from './fnt.json'
     crosshairColor: [1, 0, 0 ,1],
     colorBarMargin: 0.05, // x axis margin arount color bar, clip space coordinates
     briStep: 0.25, // step size for brightness changes
-    conStep: 0.25 // step size for contrast changes
+    conStep: 0.25, // step size for contrast changes
+    norr: true // no robust range calc
   }
 
   this.canvas = null // the canvas element on the page
@@ -797,7 +798,11 @@ Niivue.prototype.calMinMaxCore = function(overlayItem, img, percentileFrac=0.02,
   let n2pct = Math.round((nVox - nZero) * percentileFrac)
   if ((n2pct < 1) || (mn === mx)) {
     console.log("no variability in image intensity?")
-	return [ mnScale, mxScale, mnScale, mxScale ]
+	  return [ mnScale, mxScale, mnScale, mxScale ]
+  }
+  // if robust range not requested
+  if (this.opts.norr) {
+    return [ mnScale, mxScale, mnScale, mxScale]
   }
   let nBins = 1001
   let scl = (nBins-1)/(mx-mn)
